@@ -1,0 +1,14 @@
+{
+  "name": "renegade-land-claim-bot",
+  "version": "1.0.0",
+  "description": "Discord bot to post SMP land claims from Google Forms",
+  "main": "bot.js",
+  "type": "module",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.12.1",
+    "express": "^4.18.2"
+  }
+}
