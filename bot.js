@@ -1,16 +1,16 @@
-import Discord from "discord.js";
+import { Client, GatewayIntentBits, EmbedBuilder } from "discord.js";
 import express from "express";
 
-const client = new Discord.Client({
-  intents: ["Guilds", "GuildMessages", "MessageContent"]
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
 });
 
 const app = express();
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
-const DISCORD_CHANNEL_ID = "1402781201147887789"; // main land claim channel
-const ERROR_CHANNEL_ID = "1452791015973851249";   // error logging channel
+const DISCORD_CHANNEL_ID = process.env.DISCORD_CHANNEL_ID; // main land claim channel
+const ERROR_CHANNEL_ID = process.env.ERROR_CHANNEL_ID;     // error logging channel
 const BOT_TOKEN = process.env.BOT_TOKEN;
 
 // Endpoint for Google Form submissions
@@ -22,22 +22,20 @@ app.post("/claim", async (req, res) => {
   try {
     const channel = await client.channels.fetch(DISCORD_CHANNEL_ID);
 
-    // Send the initial claim message
-    const message = await channel.send({
-      content: `📍 **Land Claim Submitted**\n**Name:** ${name}\n**Info:** ${extraInfo}`,
-      files: [imageUrl] // attach image inline
-    });
+    // Create an embed with the image
+    const embed = new EmbedBuilder()
+      .setTitle(`Land Claim • ${name}`)
+      .setDescription(extraInfo || "No extra info provided")
+      .setImage(imageUrl)
+      .setColor(0x00ff00);
+
+    // Send the embed to the main channel
+    const message = await channel.send({ embeds: [embed] });
 
     // Create a thread attached to this message
     const thread = await message.startThread({
       name: `Claim • ${name}`,
       autoArchiveDuration: 1440 // 24 hours
-    });
-
-    // Optional: send image again in the thread
-    await thread.send({
-      content: "Attached map for discussion:",
-      files: [imageUrl]
     });
 
     res.status(200).send("Posted to Discord with thread!");
