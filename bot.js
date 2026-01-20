@@ -35,15 +35,19 @@ client.on("messageCreate", async (message) => {
     if (!message.webhookId) return; // Only react to webhook posts
     if (message.hasThread) return;   // Skip if thread already exists
 
+    // Wait a moment to ensure Discord finishes processing the message
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
     // Create a thread attached to the webhook message
-    const threadName = message.embeds[0]?.title
-      ? message.embeds[0].title.replace("Submission by: | ", "")
-      : `Claim • ${message.author.username}`;
+    const embedTitle = message.embeds[0]?.title || `Claim • ${message.author.username}`;
+    const threadName = embedTitle.length > 100 ? embedTitle.slice(0, 100) : embedTitle;
 
     await message.startThread({
       name: threadName,
       autoArchiveDuration: 1440, // 24 hours
     });
+
+    console.log(`Thread created for webhook message: ${threadName}`);
 
   } catch (err) {
     console.error("Failed to create thread:", err);
