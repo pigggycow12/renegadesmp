@@ -31,32 +31,28 @@ client.once("ready", () =>
 // Watch for webhook messages in the land-claim channel
 client.on("messageCreate", async (message) => {
   try {
-    if (message.channel.id !== LAND_CLAIM_CHANNEL) return;
-    if (!message.webhookId) return; // Only react to webhook posts
+    if (message.channel.id !== LAND_CLAIM_CHANNEL) return; // Only land-claim channel
+    if (!message.webhookId) return; // Only webhook posts
     if (message.hasThread) return;   // Skip if thread already exists
 
-    // Wait a moment to ensure Discord finishes processing the message
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    // Use embed title or fallback
+    let threadName = message.embeds[0]?.title || `Claim • ${message.author.username}`;
+    if (!threadName || threadName.length === 0) threadName = "New Claim";
+    if (threadName.length > 100) threadName = threadName.slice(0, 100); // Discord limit
 
-    // Create a thread attached to the webhook message
-    const embedTitle = message.embeds[0]?.title || `Claim • ${message.author.username}`;
-    const threadName = embedTitle.length > 100 ? embedTitle.slice(0, 100) : embedTitle;
-
+    // Start thread immediately
     await message.startThread({
       name: threadName,
       autoArchiveDuration: 1440, // 24 hours
     });
 
-    console.log(`Thread created for webhook message: ${threadName}`);
-
+    console.log(`Thread created: ${threadName}`);
   } catch (err) {
     console.error("Failed to create thread:", err);
     if (ERROR_CHANNEL) {
       try {
         const errorChannel = await client.channels.fetch(ERROR_CHANNEL);
-        await errorChannel.send(
-          `⚠️ Failed to create thread:\n\`\`\`${err}\`\`\``
-        );
+        await errorChannel.send(`⚠️ Failed to create thread:\n\`\`\`${err}\`\`\``);
       } catch {}
     }
   }
